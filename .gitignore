@@ -1,0 +1,8 @@
+*.log
+.gradle/
+.idea/
+build/
+*.iml
+gradle/
+gradlew
+gradlew.bat
