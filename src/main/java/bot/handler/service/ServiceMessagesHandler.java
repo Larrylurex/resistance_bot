@@ -1,8 +1,8 @@
 package bot.handler.service;
 
+import bot.SettingsHolder;
 import bot.dao.GameInfoDao;
 import bot.handler.UpdateHandler;
-import bot.service.SettingsService;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -104,7 +104,7 @@ public class ServiceMessagesHandler implements UpdateHandler {
                 .map(Message::getNewChatMembers)
                 .orElse(Collections.emptyList())
                 .stream()
-                .anyMatch(user -> user.getUserName().equals(SettingsService.BOT_NAME));
+                .anyMatch(user -> user.getUserName().equals(SettingsHolder.BOT_NAME));
     }
 
     enum SERVICE_MESSAGE {

@@ -1,5 +1,6 @@
 package bot.service;
 
+import bot.SettingsHolder;
 import bot.entities.GameInfo;
 import bot.entities.Player;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +15,6 @@ public class MessageService {
 
     @Autowired
     private GameInfoService gameInfoService;
-    @Autowired
-    private SettingsService settingsService;
 
     public String getRegisterMessage() {
         return "Register to the game\n" +
@@ -48,10 +47,10 @@ public class MessageService {
     }
 
     public String getYouAreLeaderMessage(GameInfo gameInfo) {
-        String leader = gameInfoService.getLeader(gameInfo).getLogin();
+        String leader = gameInfoService.getLeaderOrThrowException(gameInfo).getLogin();
         int numberOfPlayers = gameInfo.getPlayers().size();
         int round = gameInfo.getRound();
-        int numberOfMissioners = settingsService.getMissionersCount(round, numberOfPlayers);
+        int numberOfMissioners = SettingsHolder.getMissionersCount(round, numberOfPlayers);
         return String.format("%s - you're the leader! Pick %d players to be on a mission.", leader, numberOfMissioners);
     }
 
@@ -65,7 +64,7 @@ public class MessageService {
 
     public String getVoteResultMessage(Collection<Player> players) {
         return players.stream()
-                .map(player -> String.format("%s has vote *%s*", player.getLogin(), player.getVote().getMessage()))
+                .map(player -> String.format("%s has vote <b>%s</b>", player.getLogin(), player.getVote().getMessage()))
                 .collect(Collectors.joining("\n", "Vote results:\n", ""));
     }
 
@@ -112,10 +111,10 @@ public class MessageService {
     public String getNotEnoughPlayersMessage(int numberOfPlayers) {
         return String.format("There should be at least %d players registered\n" +
                 "You've got only %d.\n" +
-                "Please, invite someone else to play", SettingsService.MIN_PLAYERS, numberOfPlayers);
+                "Please, invite someone else to play", SettingsHolder.MIN_PLAYERS, numberOfPlayers);
     }
 
     public String getCantBeMorePlayersMessage() {
-        return String.format("There have been %d players registered already", SettingsService.MAX_PLAYERS);
+        return String.format("There have been %d players registered already", SettingsHolder.MAX_PLAYERS);
     }
 }

@@ -2,7 +2,6 @@ package bot;
 
 import bot.handler.UpdateHandler;
 import bot.handler.factory.HandlerFactory;
-import bot.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -40,11 +39,11 @@ public class ResistanceBotPolling extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return SettingsService.BOT_NAME;
+        return SettingsHolder.BOT_NAME;
     }
 
     @Override
     public String getBotToken() {
-        return SettingsService.BOT_TOKEN;
+        return SettingsHolder.BOT_TOKEN;
     }
 }

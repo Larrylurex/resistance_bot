@@ -31,6 +31,6 @@ public class EndGameHandler extends AbstractUpdateHandler {
     @Override
     protected List<BotApiMethod<? extends Serializable>> processUpdate(Update update, GameInfo gameInfo) {
         int messageId = update.getCallbackQuery().getMessage().getMessageId();
-        return Collections.singletonList(getRemoveKeyboardMessage(messageId, getChatId(update)));
+        return Collections.singletonList(commonMessageHolder.getRemoveKeyboardMessage(messageId, getChatId(update)));
     }
 }

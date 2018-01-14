@@ -6,6 +6,8 @@ import bot.enums.GamePhase;
 import bot.enums.Vote;
 import bot.exception.ValidationException;
 import bot.handler.game.data.CallbackQueryData;
+import bot.service.game.VoteService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.api.methods.BotApiMethod;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
@@ -14,13 +16,12 @@ import org.telegram.telegrambots.api.objects.Update;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component
 public class VoteHandler extends AbstractUpdateHandler {
 
+    @Autowired
+    private VoteService voteService;
 
     @Override
     protected GamePhase getPhase() {
@@ -55,60 +56,14 @@ public class VoteHandler extends AbstractUpdateHandler {
 
         List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
         result.add(getPlayerVotedMessage(gameInfo.getChatId(), player));
-        if (gameInfoService.areAllPlayersVoted(gameInfo)) {
-            botService.vote(gameInfo);
-            int messageId = update.getCallbackQuery().getMessage().getMessageId();
-            result.add(getRemoveKeyboardMessage(messageId, gameInfo.getChatId()));
-            result.add(getVotesMessages(gameInfo));
-            result.addAll(processVoteResult(gameInfo));
+        if (!voteService.needToVote(gameInfo)) {
+            result.addAll(voteService.processVote(gameInfo));
         }
 
         return result;
     }
 
     private SendMessage getPlayerVotedMessage(long chatId, Player player) {
-        return getSimpleMessage(chatId, messageService.getPlayerVotedMessage(player));
+        return commonMessageHolder.getSimpleMessage(chatId, messageService.getPlayerVotedMessage(player));
     }
-
-
-    private SendMessage getVotesMessages(GameInfo gameInfo) {
-        return getSimpleMessage(gameInfo.getChatId(),
-                messageService.getVoteResultMessage(gameInfo.getPlayers())).setParseMode("Markdown");
-    }
-
-    private List<SendMessage> processVoteResult(GameInfo gameInfo) {
-        List<SendMessage> result = new ArrayList<>();
-        if (isTeamConfirmed(gameInfo)) {
-            result.add(getStartMissionMessage(gameInfo));
-            gameInfo.setPhase(GamePhase.ROUND_PLAY);
-        } else {
-            gameInfo.newStep();
-            if (checkStepsOver(gameInfo)) {
-                result.addAll(gameOver(gameInfo, messageService.getRunOutOfStepsMessage(), false));
-            } else {
-                result.add(startNewGameCycle(gameInfo));
-            }
-        }
-        return result;
-    }
-
-    private boolean checkStepsOver(GameInfo gameInfo) {
-        return gameInfo.getStep() >= 5;
-    }
-
-    private boolean isTeamConfirmed(GameInfo gameInfo) {
-        Map<Vote, Long> votes = gameInfo.getPlayers().stream()
-                .map(Player::getVote)
-                .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-
-        return votes.getOrDefault(Vote.FOR, 0L) >
-                votes.getOrDefault(Vote.AGAINST, 0L);
-    }
-
-    private SendMessage getStartMissionMessage(GameInfo gameInfo) {
-        return getMessageWithKeyboard(gameInfo.getChatId(),
-                messageService.getStartMissionMessage(gameInfoService.getPlayersInMission(gameInfo)),
-                keyboardHolderService.getMissionKeyboard());
-    }
-
 }

@@ -11,14 +11,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.telegram.telegrambots.api.methods.BotApiMethod;
 import org.telegram.telegrambots.api.methods.send.SendMessage;
-import org.telegram.telegrambots.api.methods.updatingmessages.EditMessageReplyMarkup;
+import org.telegram.telegrambots.api.objects.CallbackQuery;
+import org.telegram.telegrambots.api.objects.Message;
 import org.telegram.telegrambots.api.objects.Update;
-import org.telegram.telegrambots.api.objects.replykeyboard.ReplyKeyboard;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
@@ -29,11 +27,11 @@ public abstract class AbstractUpdateHandler implements UpdateHandler {
     @Autowired
     protected GameInfoService gameInfoService;
     @Autowired
+    protected CommonMessageHolderService commonMessageHolder;
+    @Autowired
     protected KeyboardHolderService keyboardHolderService;
     @Autowired
     protected MessageService messageService;
-    @Autowired
-    protected SettingsService settingsService;
     @Autowired
     protected AIBotService botService;
 
@@ -49,6 +47,7 @@ public abstract class AbstractUpdateHandler implements UpdateHandler {
         try {
             validateQuery(update, gameInfo);
             result = processUpdate(update, gameInfo);
+            result.addAll(getRemoveKeyBoardMessageIfNeeded(result, update));
         } catch (ValidationException ex) {
             log.error("Wrong request", ex);
         } catch (ProcessException ex) {
@@ -59,6 +58,19 @@ public abstract class AbstractUpdateHandler implements UpdateHandler {
             lock.unlock();
         }
 
+        return result;
+    }
+
+    private List<? extends BotApiMethod<? extends Serializable>> getRemoveKeyBoardMessageIfNeeded(List<BotApiMethod<? extends Serializable>> messages, Update update) {
+        boolean newKeyboardExists = messages.stream().filter(m -> m instanceof SendMessage)
+                .map(SendMessage.class::cast)
+                .map(SendMessage::getReplyMarkup)
+                .anyMatch(Objects::nonNull);
+        List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
+        if (newKeyboardExists) {
+            getMessageId(update)
+                    .ifPresent(messageId -> result.add(commonMessageHolder.getRemoveKeyboardMessage(messageId, getChatId(update))));
+        }
         return result;
     }
 
@@ -73,50 +85,16 @@ public abstract class AbstractUpdateHandler implements UpdateHandler {
         }
     }
 
-    protected EditMessageReplyMarkup getRemoveKeyboardMessage(int messageId, Long chatId) {
-        return new EditMessageReplyMarkup()
-                .setChatId(chatId)
-                .setMessageId(messageId);
-    }
-
-    protected SendMessage getSimpleMessage(long chatId, String text) {
-        return new SendMessage()
-                .setChatId(chatId)
-                .setText(text);
-    }
-
-    protected SendMessage getMessageWithKeyboard(long chatId, String text, ReplyKeyboard keyboard) {
-        return getSimpleMessage(chatId, text)
-                .setReplyMarkup(keyboard);
-    }
-
-
-    protected SendMessage startNewGameCycle(GameInfo gameInfo) {
-        gameInfoService.changeLeader(gameInfo);
-        gameInfo.setPhase(GamePhase.ROUND_PICK_USER);
-        return getYouAreLeaderMessage(gameInfo);
-    }
-
-    protected SendMessage getYouAreLeaderMessage(GameInfo gameInfo) {
-        return getMessageWithKeyboard(gameInfo.getChatId(),
-                messageService.getYouAreLeaderMessage(gameInfo),
-                keyboardHolderService.getPlayersPickerKeyboard(gameInfo.getPlayers()));
-    }
-
-    protected List<SendMessage> gameOver(GameInfo gameInfo, String reason, boolean resistanceWon) {
-        long chatId = gameInfo.getChatId();
-        gameInfoService.clearChatData(chatId);
-        lockService.removeLock(chatId);
-        List<SendMessage> result = new ArrayList<>();
-        result.add(getSimpleMessage(chatId, reason));
-        String message = resistanceWon ? "RESISTANCE WON THE GAME" : "SPIES WON THE GAME";
-        result.add(getMessageWithKeyboard(chatId, message, keyboardHolderService.getNewGameKeyboard()));
-        return result;
-    }
-
     protected Player getSender(Update update, GameInfo gameInfo) {
         String senderName = update.getCallbackQuery().getFrom().getUserName();
         return gameInfoService.getPlayerByLoginOrThrowException(senderName, gameInfo);
+    }
+
+    protected Optional<Integer> getMessageId(Update update) {
+        return Optional.ofNullable(update.getCallbackQuery())
+                .map(CallbackQuery::getMessage)
+                .map(Message::getMessageId);
+
     }
 
     protected abstract List<BotApiMethod<? extends Serializable>> processUpdate(Update update, GameInfo gameInfo);

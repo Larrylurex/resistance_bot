@@ -1,4 +1,4 @@
-package bot.service;
+package bot;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,17 +7,16 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
-public class SettingsService {
+public class SettingsHolder {
 
     public static final String BOT_NAME = "The_Resistance_Game_Bot";
     public static final String BOT_TOKEN = "520738837:AAGew20dH6V4wacKpc3S53apl1GtQELf-j4";
     public static final int MIN_PLAYERS = 5;
     public static final int MAX_PLAYERS = 10;
 
-    private final Map<Integer, Integer> spiesAmongPlayers = new HashMap<>();
+    private static final Map<Integer, Integer> spiesAmongPlayers = new HashMap<>();
 
-    {
+    static {
         spiesAmongPlayers.put(5, 2);
         spiesAmongPlayers.put(6, 2);
         spiesAmongPlayers.put(7, 3);
@@ -26,9 +25,9 @@ public class SettingsService {
         spiesAmongPlayers.put(10, 4);
     }
 
-    private final Map<MissionKey, MissionSettings> playersInMission = new HashMap<>();
+    private static final Map<MissionKey, MissionSettings> playersInMission = new HashMap<>();
 
-    {
+    static {
         playersInMission.put(new MissionKey(0, 5), new MissionSettings(2));
         playersInMission.put(new MissionKey(0, 6), new MissionSettings(2));
         playersInMission.put(new MissionKey(0, 7), new MissionSettings(2));
@@ -65,28 +64,28 @@ public class SettingsService {
         playersInMission.put(new MissionKey(4, 10), new MissionSettings(5));
     }
 
-    public int getSpiesCount(int numberOfPlayers) {
+    public static int getSpiesCount(int numberOfPlayers) {
         return spiesAmongPlayers.get(numberOfPlayers);
     }
 
-    public int getMissionersCount(int mission, int numberOfPlayers) {
+    public static int getMissionersCount(int mission, int numberOfPlayers) {
         return playersInMission.get(new MissionKey(mission, numberOfPlayers)).numberOfMissioners;
     }
 
-    public int getRedCardsCountToWin(int mission, int numberOfPlayers) {
+    public static int getRedCardsCountToWin(int mission, int numberOfPlayers) {
         return playersInMission.get(new MissionKey(mission, numberOfPlayers)).numberOfSpiesCards;
     }
 
     @Data
     @AllArgsConstructor
-    private class MissionKey {
+    private static class MissionKey {
         int missionNumber;
         int numberOfPlayers;
     }
 
     @Data
     @AllArgsConstructor
-    private class MissionSettings {
+    private static class MissionSettings {
         int numberOfMissioners;
         int numberOfSpiesCards = 1;
 

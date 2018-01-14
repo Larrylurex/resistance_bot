@@ -3,6 +3,7 @@ package bot.ai;
 import bot.ai.mind.Mind;
 import bot.ai.mind.ResistanceMind;
 import bot.ai.mind.SpyMind;
+import bot.entities.GameInfo;
 import bot.entities.Player;
 
 public class AIPlayer extends Player {
@@ -36,4 +37,11 @@ public class AIPlayer extends Player {
     }
 
 
+    public void chooseTeam(GameInfo gameInfo) {
+        mind.chooseTeam(gameInfo);
+    }
+
+    public void goOnMission() {
+        setCard(mind.goOnMission());
+    }
 }
