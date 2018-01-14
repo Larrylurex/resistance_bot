@@ -2,17 +2,40 @@ package bot;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 public class SettingsHolder {
 
-    public static final String BOT_NAME = "The_Resistance_Game_Bot";
-    public static final String BOT_TOKEN = "520738837:AAGew20dH6V4wacKpc3S53apl1GtQELf-j4";
+    public static final String CONFIG = "conf.properties";
+    public static final String BOT_NAME;
+    public static final String BOT_TOKEN;
     public static final int MIN_PLAYERS = 5;
     public static final int MAX_PLAYERS = 10;
+
+    static {
+        Properties properties = readProps();
+        BOT_NAME = properties.getProperty("name");
+        BOT_TOKEN = properties.getProperty("token");
+    }
+
+    @SneakyThrows(IOException.class)
+    private static Properties readProps(){
+        File conf = new File(SettingsHolder.class.getClassLoader().getResource(CONFIG).getFile());
+        try (FileInputStream fileInput = new FileInputStream(conf)) {
+            Properties properties = new Properties();
+            properties.load(fileInput);
+            return properties;
+        }
+
+    }
 
     private static final Map<Integer, Integer> spiesAmongPlayers = new HashMap<>();
 
