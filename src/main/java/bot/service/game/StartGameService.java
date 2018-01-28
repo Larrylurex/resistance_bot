@@ -6,6 +6,7 @@ import bot.entities.GameInfo;
 import bot.entities.Player;
 import bot.enums.GamePhase;
 import bot.enums.Vote;
+import bot.notification.NotificationService;
 import bot.service.AIBotService;
 import bot.service.CommonMessageHolderService;
 import bot.service.GameInfoService;
@@ -34,9 +35,13 @@ public class StartGameService {
     @Autowired
     private MessageService messageService;
     @Autowired
+    private NotificationService notificationService;
+    @Autowired
     private VoteService voteService;
 
     public List<BotApiMethod<? extends Serializable>> startGame(GameInfo gameInfo) {
+
+        notificationService.notifyIntroductionDone(gameInfo);
         List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
         Set<Player> players = gameInfo.getPlayers();
         pickSpies(players);
@@ -107,13 +112,9 @@ public class StartGameService {
     }
 
     private void pickLeader(GameInfo gameInfo) {
-        Optional<Player> leader = gameInfoService.getLeader(gameInfo);
-        Player newLeader;
-        if (leader.isPresent()) {
-            newLeader = getNextLeader(gameInfo, leader.get());
-        } else {
-            newLeader = getNewLeader(gameInfo);
-        }
+        Player newLeader = gameInfoService.getLeader(gameInfo)
+                .map(player -> getNextLeader(gameInfo, player))
+                .orElseGet(() -> getNewLeader(gameInfo));
 
         newLeader.setLeader(true);
         newLeader.setVote(Vote.FOR);
@@ -128,10 +129,9 @@ public class StartGameService {
         currentLeader.setLeader(false);
         int curLeaderOrder = currentLeader.getORDER();
         int nextLeaderOrder = curLeaderOrder + 1 >= gameInfo.getPlayers().size() ? 0 : curLeaderOrder + 1;
-        Player nextLeader = gameInfo.getPlayers().stream()
+        return gameInfo.getPlayers().stream()
                 .filter(p -> p.getORDER() == nextLeaderOrder)
                 .findAny().get();
-        return nextLeader;
 
     }
 }

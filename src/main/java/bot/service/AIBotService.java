@@ -15,7 +15,7 @@ public class AIBotService {
     public void vote(GameInfo gameInfo) {
         gameInfoService.getBots(gameInfo).stream()
                 .filter(bot -> !bot.isLeader())
-                .forEach(AIPlayer::vote);
+                .forEach(aiPlayer -> aiPlayer.vote(gameInfo));
     }
 
     public void chooseTeam(GameInfo gameInfo) {
@@ -28,6 +28,6 @@ public class AIBotService {
     public void goOnMission(GameInfo gameInfo) {
         gameInfoService.getBots(gameInfo).stream()
                 .filter(Player::isOnMission)
-                .forEach(AIPlayer::goOnMission);
+                .forEach(aiPlayer -> aiPlayer.goOnMission(gameInfo));
     }
 }

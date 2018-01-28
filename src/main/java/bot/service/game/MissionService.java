@@ -5,6 +5,7 @@ import bot.entities.GameInfo;
 import bot.entities.Player;
 import bot.enums.GamePhase;
 import bot.enums.MissionCard;
+import bot.notification.NotificationService;
 import bot.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,8 @@ public class MissionService {
     @Autowired
     private KeyboardHolderService keyboardHolderService;
     @Autowired
+    private NotificationService notificationService;
+    @Autowired
     private StartGameService startGameService;
     @Autowired
     private GameOverService gameOverService;
@@ -58,7 +61,7 @@ public class MissionService {
 
     public List<BotApiMethod<? extends Serializable>> processMissionResults(GameInfo gameInfo) {
         List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
-
+        notificationService.notifyMissionDone(gameInfo );
         Map<MissionCard, Long> cardsCount = getCardsCount(gameInfo);
         setRoundResult(gameInfo, cardsCount);
 

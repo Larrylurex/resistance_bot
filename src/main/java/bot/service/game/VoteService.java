@@ -4,6 +4,7 @@ import bot.entities.GameInfo;
 import bot.entities.Player;
 import bot.enums.GamePhase;
 import bot.enums.Vote;
+import bot.notification.NotificationService;
 import bot.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,8 @@ public class VoteService {
     @Autowired
     private KeyboardHolderService keyboardHolderService;
     @Autowired
+    private NotificationService notificationService;
+    @Autowired
     private StartGameService startGameService;
     @Autowired
     private MissionService missionService;
@@ -40,6 +43,7 @@ public class VoteService {
 
     public List<BotApiMethod<? extends Serializable>> startVote(GameInfo gameInfo) {
         List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
+        notificationService.notifyTeamChosenDone(gameInfo);
         botService.vote(gameInfo);
         if (needToVote(gameInfo)) {
             gameInfo.setPhase(GamePhase.ROUND_VOTE);
@@ -60,6 +64,7 @@ public class VoteService {
     public List<BotApiMethod<? extends Serializable>> processVote(GameInfo gameInfo) {
         List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
         result.add(getVotesMessage(gameInfo));
+        notificationService.notifyVoteDone(gameInfo);
         if (isTeamConfirmed(gameInfo)) {
             result.addAll(missionService.startMission(gameInfo));
         } else {
