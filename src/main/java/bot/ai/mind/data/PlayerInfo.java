@@ -10,7 +10,16 @@ import java.util.List;
 @Data
 public class PlayerInfo {
 
+    public static final int MAX_PERCENTAGE = 100;
+    public static final int MIN_PERCENTAGE = 0;
+
     private String login;
+
+    public void setSpyProbability(int spyProbability) {
+        int totalSpyProbability = Math.min(Math.max(MIN_PERCENTAGE , spyProbability), MAX_PERCENTAGE);
+        this.spyProbability = totalSpyProbability;
+    }
+
     private int spyProbability;
     private List<List<String>> leaderChoice = new ArrayList<>();
     private List<MissionResult> missionResults = new ArrayList<>();
@@ -33,31 +42,17 @@ public class PlayerInfo {
         voteResults.add(new VoteResult(team, vote));
     }
 
-    public void recalculateProbability() {
-        processMissionResults();
-    }
-
-    private void processMissionResults() {
-        for( MissionResult result: missionResults){
-            if(result.team.contains(login)){
-                if(result.redCardsCount > 0)
-                    spyProbability += (int)(30L * result.redCardsCount / result.team.size());
-                else {
-                    spyProbability -= 5;
-                }
-            }
-        }
-
-    }
 
     @AllArgsConstructor
-    private class MissionResult {
+    @Data
+    public static class MissionResult {
         private List<String> team;
         private int redCardsCount;
     }
 
     @AllArgsConstructor
-    private class VoteResult {
+    @Data
+    public static class VoteResult {
         private List<String> team;
         private Vote vote;
     }

@@ -116,10 +116,10 @@ public class MissionService {
             Map<Boolean, Long> roundResults = Arrays.stream(gameInfo.getRoundResults())
                     .filter(Objects::nonNull)
                     .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
-            if (roundResults.get(true) >= NUMBER_OF_ROUNDS_TO_WIN) {
+            if (roundResults.getOrDefault(true, 0L) >= NUMBER_OF_ROUNDS_TO_WIN) {
                 winner = Optional.of(true);
             }
-            if (roundResults.get(false) >= NUMBER_OF_ROUNDS_TO_WIN) {
+            if (roundResults.getOrDefault(false, 0L) >= NUMBER_OF_ROUNDS_TO_WIN) {
                 winner = Optional.of(false);
             }
         }

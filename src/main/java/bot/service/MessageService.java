@@ -77,7 +77,11 @@ public class MessageService {
     }
 
     public String getLeaderChoiceMessage(Player leader, List<Player> playersInRound) {
-        return String.format("%s chose %s to play this round. Let's vote!", leader.getLogin(), formatPlayerList(playersInRound));
+        return String.format("%s chose %s to play this round", leader.getLogin(), formatPlayerList(playersInRound));
+    }
+
+    public String getLetsVoteMessage() {
+        return "Let's vote";
     }
 
     private String formatPlayerList(Collection<Player> players) {

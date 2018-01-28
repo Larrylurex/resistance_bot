@@ -11,9 +11,7 @@ import bot.notification.event.TeamChoosingEvent;
 import bot.notification.event.VoteEvent;
 import bot.util.ResistanceUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SpyMind extends AbstractMind {
@@ -29,14 +27,19 @@ public class SpyMind extends AbstractMind {
                 .anyMatch(Player::isSpy);
 
         Random rand = new Random(System.currentTimeMillis());
-        boolean goAgainst = !spyOnMission || (gameInfo.getRound() + rand.nextInt(5)) >= 4;
-        return goAgainst ? Vote.AGAINST : Vote.FOR;
+        boolean goFor = spyOnMission || (gameInfo.getRound() + rand.nextInt(5)) < 3;
+        return goFor ? Vote.FOR : Vote.AGAINST;
     }
 
     @Override
     public MissionCard goOnMission(GameInfo gameInfo) {
+        long roundsWonByResistance = Arrays.stream(gameInfo.getRoundResults())
+                .filter(Objects::nonNull)
+                .filter(r -> r)
+                .count();
+
         Random rand = new Random(System.currentTimeMillis());
-        boolean goRed = (gameInfo.getRound() + rand.nextInt(5)) >= 5;
+        boolean goRed = roundsWonByResistance > 1 || (gameInfo.getRound() + rand.nextInt(5)) >= 4;
 
         return goRed ? MissionCard.RED: MissionCard.BLUE;
     }

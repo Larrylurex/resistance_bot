@@ -12,6 +12,7 @@ import bot.service.CommonMessageHolderService;
 import bot.service.GameInfoService;
 import bot.service.MessageService;
 import bot.util.ResistanceUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.api.methods.BotApiMethod;
@@ -22,8 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class StartGameService {
 
     @Autowired
@@ -63,6 +66,7 @@ public class StartGameService {
         int spiesCount = SettingsHolder.getSpiesCount(players.size());
         List<Player> randomPlayers = ResistanceUtils.getRandomPlayers(spiesCount, players);
         randomPlayers.forEach(p -> p.setSpy(true));
+        log.info("SPIES are: {}", randomPlayers.stream().map(Player::getLogin).collect(Collectors.joining(", ")));
     }
 
     private List<SendMessage> getWhoAmIMessages(GameInfo gameInfo) {

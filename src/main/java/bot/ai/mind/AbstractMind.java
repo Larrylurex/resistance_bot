@@ -1,13 +1,10 @@
 package bot.ai.mind;
 
-import bot.SettingsHolder;
-import bot.entities.GameInfo;
 import bot.entities.Player;
 import bot.notification.event.*;
-import bot.util.ResistanceUtils;
+import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-
+@Slf4j
 public abstract class AbstractMind implements Mind {
 
     protected Player me;
@@ -18,6 +15,7 @@ public abstract class AbstractMind implements Mind {
 
     @Override
     public void processEvent(GameEvent event) {
+        log.info("Process {} event", event.getClass().getSimpleName());
         if(event instanceof VoteEvent){
             processVoteEvent((VoteEvent) event);
         } else if (event instanceof MissionEvent) {
@@ -27,10 +25,10 @@ public abstract class AbstractMind implements Mind {
         } else if (event instanceof IntroductionEvent) {
             processIntroductionEvent((IntroductionEvent) event);
         }
-        think();
+        recalculateProbability(event.getRound());
     }
 
-    protected void think(){}
+    protected void recalculateProbability(int round){}
 
     protected void processIntroductionEvent(IntroductionEvent event){}
 

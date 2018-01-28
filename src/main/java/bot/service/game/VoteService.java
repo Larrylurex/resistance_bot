@@ -45,6 +45,7 @@ public class VoteService {
         List<BotApiMethod<? extends Serializable>> result = new ArrayList<>();
         notificationService.notifyTeamChosenDone(gameInfo);
         botService.vote(gameInfo);
+        result.add(getLeaderChoiceMessage(gameInfo));
         if (needToVote(gameInfo)) {
             gameInfo.setPhase(GamePhase.ROUND_VOTE);
             result.add(getLetsVoteMessage(gameInfo));
@@ -54,9 +55,14 @@ public class VoteService {
         return result;
     }
 
-    public SendMessage getLetsVoteMessage(GameInfo gameInfo) {
+    public SendMessage getLeaderChoiceMessage(GameInfo gameInfo) {
         String message = messageService.getLeaderChoiceMessage(gameInfoService.getLeaderOrThrowException(gameInfo),
                 gameInfoService.getPlayersInMission(gameInfo));
+        return commonMessageHolder.getSimpleMessage(gameInfo.getChatId(), message);
+    }
+
+    public SendMessage getLetsVoteMessage(GameInfo gameInfo) {
+        String message = messageService.getLetsVoteMessage();
         InlineKeyboardMarkup keyboard = keyboardHolderService.getVotingKeyboard();
         return commonMessageHolder.getMessageWithKeyboard(gameInfo.getChatId(), message, keyboard);
     }
